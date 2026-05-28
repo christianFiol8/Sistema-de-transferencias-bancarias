@@ -66,6 +66,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             set -e
+            mkdir -p /home/${{ secrets.SSH_USER }}/sistema-de-transferencias-bancarias
             cd /home/${{ secrets.SSH_USER }}/sistema-de-transferencias-bancarias
             docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" -p "${{ secrets.DOCKER_HUB_TOKEN }}"
             docker stack deploy --with-registry-auth -c docker-stack.yml banco-nexus
