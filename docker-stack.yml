@@ -1,55 +1,32 @@
-version: '3.8'
+version: "3.8"
 
 services:
-
-  # ── Backend monolítico — 2 réplicas en nodos EC2 ─────────────────────────
   backend:
-    image: ${DOCKER_IMAGE_BACKEND:-banconexxus/backend:latest}
-    deploy:
-      replicas: 2
-      update_config:
-        parallelism: 1        # Rolling update: de una réplica a la vez
-        delay: 10s
-        failure_action: rollback
-        order: start-first    # Nueva réplica sube antes de bajar la vieja
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
-      placement:
-        constraints:
-          - node.role == worker   # Desplegado en los 2 nodos trabajadores (EC2 backend)
-    environment:
-      - MONGO_URI=${MONGO_URI}
-      - DB_NAME=${DB_NAME:-nexus_banca}
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-8h}
-      - PORT=3000
-    networks:
-      - nexus-overlay
+    image: christianfh08/sistema-de-transferencias-bancarias-backend:latest
     ports:
       - "3000:3000"
-
-  # ── Frontend — 1 réplica en EC2 dedicada ─────────────────────────────────
-  frontend:
-    image: ${DOCKER_IMAGE_FRONTEND:-banconexxus/frontend:latest}
+    environment:
+      MONGO_URI: ${MONGO_URI}
+      DB_NAME: ${DB_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      PORT: 3000
     deploy:
-      replicas: 1
+      replicas: 2
+      restart_policy:
+        condition: on-failure
       update_config:
         parallelism: 1
         delay: 10s
-        failure_action: rollback
-      restart_policy:
-        condition: on-failure
-      placement:
-        constraints:
-          - node.role == manager   # Desplegado en el nodo manager (EC2 frontend)
-    networks:
-      - nexus-overlay
+
+  frontend:
+    image: christianfh08/sistema-de-transferencias-bancarias-frontend:latest
     ports:
       - "80:80"
-
-networks:
-  nexus-overlay:
-    driver: overlay
-    attachable: true
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        delay: 10s
