@@ -1,9 +1,11 @@
 const { MongoClient } = require("mongodb");
 const { sendDbAlert } = require("./sse");
 
-const uri =
-  process.env.MONGO_URI ||
-  "mongodb://localhost:27017,localhost:27018,localhost:27019/?replicaSet=rsBanco";
+const uri = process.env.MONGO_URI;
+
+if (!uri) {
+  throw new Error("MONGO_URI no está definida");
+}
 
 const dbName = process.env.DB_NAME || "nexus_banca";
 

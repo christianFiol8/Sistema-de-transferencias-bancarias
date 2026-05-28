@@ -68,6 +68,9 @@ jobs:
             set -e
             mkdir -p /home/${{ secrets.SSH_USER }}/sistema-de-transferencias-bancarias
             cd /home/${{ secrets.SSH_USER }}/sistema-de-transferencias-bancarias
+            export MONGO_URI='${{ secrets.MONGO_URI }}'
+            export JWT_SECRET='${{ secrets.JWT_SECRET }}'
+            export JWT_EXPIRES_IN='${{ secrets.JWT_EXPIRES_IN }}'
             docker login -u "${{ secrets.DOCKER_HUB_USER }}" -p "${{ secrets.DOCKER_HUB_TOKEN }}"
             docker stack deploy --with-registry-auth -c docker-stack.yml banco-nexus
             docker service ls
