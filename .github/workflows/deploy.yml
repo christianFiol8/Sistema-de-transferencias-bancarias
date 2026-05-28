@@ -24,7 +24,7 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          username: ${{ secrets.DOCKER_HUB_USER }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       - name: Build and push backend
@@ -34,8 +34,8 @@ jobs:
           file: ./backend/Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-de-transferencias-bancarias-backend:latest
-            ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-de-transferencias-bancarias-backend:${{ github.sha }}
+            ${{ secrets.DOCKER_HUB_USER }}/sistema-de-transferencias-bancarias-backend:latest
+            ${{ secrets.DOCKER_HUB_USER}}/sistema-de-transferencias-bancarias-backend:${{ github.sha }}
 
       - name: Build and push frontend
         uses: docker/build-push-action@v6
@@ -44,8 +44,8 @@ jobs:
           file: ./frontend/Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-de-transferencias-bancarias-frontend:latest
-            ${{ secrets.DOCKER_HUB_USERNAME }}/sistema-de-transferencias-bancarias-frontend:${{ github.sha }}
+            ${{ secrets.DOCKER_HUB_USER }}/sistema-de-transferencias-bancarias-frontend:latest
+            ${{ secrets.DOCKER_HUB_USER }}/sistema-de-transferencias-bancarias-frontend:${{ github.sha }}
 
       - name: Copy stack file to manager
         uses: appleboy/scp-action@v0.1.7
@@ -68,7 +68,7 @@ jobs:
             set -e
             mkdir -p /home/${{ secrets.SSH_USER }}/sistema-de-transferencias-bancarias
             cd /home/${{ secrets.SSH_USER }}/sistema-de-transferencias-bancarias
-            docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" -p "${{ secrets.DOCKER_HUB_TOKEN }}"
+            docker login -u "${{ secrets.DOCKER_HUB_USER }}" -p "${{ secrets.DOCKER_HUB_TOKEN }}"
             docker stack deploy --with-registry-auth -c docker-stack.yml banco-nexus
             docker service ls
             docker stack ps banco-nexus
