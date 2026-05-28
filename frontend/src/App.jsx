@@ -2,6 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 
 const API = import.meta.env.VITE_API_URL;
 
+if (!APIL) {
+  throw new Error('VITE_API_URL no está definida');
+}
+
 function formatCurrency(n) {
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
 }
