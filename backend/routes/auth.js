@@ -114,7 +114,7 @@ const camposRequeridos = { nombre, apellidoPaterno, correo, contrasena, telefono
       await db.collection("bitacora").insertOne({
         fecha:     new Date(),
         usuarioId: clienteId,
-        accion:    "registro",
+        accion:    "alta de cuenta",
         estado:    "exitoso",
         detalle:   { numeroCuenta, idSecuencial }
       }, { session });
@@ -141,7 +141,7 @@ const camposRequeridos = { nombre, apellidoPaterno, correo, contrasena, telefono
       await db.collection("bitacora").insertOne({
         fecha:     new Date(),
         usuarioId: null,
-        accion:    "registro",
+        accion:    "alta de cuenta",
         estado:    "fallido",
         detalle:   { error: error.message }
       });
@@ -184,7 +184,7 @@ router.post("/login", async (req, res) => {
       await db.collection("bitacora").insertOne({
         fecha:     new Date(),
         usuarioId: null,
-        accion:    "login_fallido",
+        accion:    "login fallido",
         estado:    "fallido",
         detalle:   { correo: correoLimpio, motivo: "Usuario no encontrado" }
       });
@@ -201,7 +201,7 @@ router.post("/login", async (req, res) => {
       await db.collection("bitacora").insertOne({
         fecha:     new Date(),
         usuarioId: cliente._id,
-        accion:    "login_fallido",
+        accion:    "login fallido",
         estado:    "fallido",
         detalle:   { correo: correoLimpio, motivo: "Contraseña incorrecta" }
       });
@@ -232,7 +232,7 @@ router.post("/login", async (req, res) => {
     await db.collection("bitacora").insertOne({
       fecha:     new Date(),
       usuarioId: cliente._id,
-      accion:    "login_exitoso",
+      accion:    "login exitoso",
       estado:    "exitoso",
       detalle:   { correo: correoLimpio, numeroCuenta: cuenta.numeroCuenta }
     });

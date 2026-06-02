@@ -1,5 +1,9 @@
 version: "3.8"
 
+networks:
+  banco-net:
+    driver: overlay
+
 services:
   backend:
     image: christianfh08/sistema-de-transferencias-bancarias-backend:latest
@@ -11,22 +15,34 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
       PORT: 3000
+    networks:
+      - banco-net
     deploy:
       replicas: 2
       restart_policy:
         condition: on-failure
+      placement:
+        constraints:
+          - node.labels.role == backend
       update_config:
         parallelism: 1
         delay: 10s
+        order: start-first
 
   frontend:
     image: christianfh08/sistema-de-transferencias-bancarias-frontend:latest
     ports:
       - "80:80"
+    networks:
+      - banco-net
     deploy:
       replicas: 1
       restart_policy:
         condition: on-failure
+      placement:
+        constraints:
+          - node.labels.role == frontend
       update_config:
         parallelism: 1
         delay: 10s
+        order: start-first

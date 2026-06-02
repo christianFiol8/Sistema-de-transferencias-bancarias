@@ -97,11 +97,25 @@ router.post("/", verifyToken, async (req, res) => {
 
       transaccionId = txDestino.insertedId;
 
-      // 5. Bitácora
+      // 5. Bitácora (Origen - Transferencia Aprobada)
       await db.collection("bitacora").insertOne({
         fecha:     ahora,
         usuarioId: new ObjectId(req.usuario.id),
-        accion:    "transferencia_aprobada",
+        accion:    "transferencia aprobada",
+        estado:    "exitoso",
+        detalle: {
+          cuentaOrigen:  numeroCuentaOrigen,
+          cuentaDestino,
+          monto:         montoNum,
+          mensaje:       mensaje || ""
+        }
+      }, { session });
+
+      // 5b. Bitácora (Destino - Transferencia Aceptada)
+      await db.collection("bitacora").insertOne({
+        fecha:     ahora,
+        usuarioId: destino.clienteId,
+        accion:    "transferencia aceptada",
         estado:    "exitoso",
         detalle: {
           cuentaOrigen:  numeroCuentaOrigen,
@@ -145,7 +159,7 @@ router.post("/", verifyToken, async (req, res) => {
       await db.collection("bitacora").insertOne({
         fecha:     new Date(),
         usuarioId: req.usuario?.id ? new ObjectId(req.usuario.id) : null,
-        accion:    "transferencia_fallida",
+        accion:    "transferencia fallida",
         estado:    "fallido",
         detalle: {
           cuentaOrigen:  req.usuario?.numeroCuenta,

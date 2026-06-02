@@ -31,7 +31,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./backend
-          file: ./backend/Dockerfile
+          file: ./backend/dockerfile
           push: true
           tags: |
             ${{ secrets.DOCKER_HUB_USER }}/sistema-de-transferencias-bancarias-backend:latest
@@ -41,7 +41,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./frontend
-          file: ./frontend/Dockerfile
+          file: ./frontend/dockerfile
           push: true
           tags: |
             ${{ secrets.DOCKER_HUB_USER }}/sistema-de-transferencias-bancarias-frontend:latest

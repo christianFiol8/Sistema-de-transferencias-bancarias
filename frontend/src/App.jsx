@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 
 const API = import.meta.env.VITE_API_URL;
 
-if (!APIL) {
+if (!API) {
   throw new Error('VITE_API_URL no está definida');
 }
 

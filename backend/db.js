@@ -110,6 +110,13 @@ async function connectDB() {
     await client.connect();
     db = client.db(dbName);
     console.log(`✅ Conectado a MongoDB — base: ${dbName}`);
+
+    // Configurar índices de unicidad requeridos y recomendados
+    await db.collection("cuentas").createIndex({ numeroCuenta: 1 }, { unique: true });
+    await db.collection("clientes").createIndex({ correo: 1 }, { unique: true });
+    await db.collection("clientes").createIndex({ curp: 1 }, { unique: true });
+    console.log("   Índices de unicidad configurados.");
+
     return db;
   } catch (err) {
     console.error("❌ Error al conectar con MongoDB:", err.message);

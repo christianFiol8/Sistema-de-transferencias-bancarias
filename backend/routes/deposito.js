@@ -1,16 +1,20 @@
 const express     = require("express");
 const router      = express.Router();
-const { getDB }   = require("../db");
+const { getDB, getClient } = require("../db");
 const verifyToken = require("../middleware/verifyToken");
 const { sendAccountUpdate } = require("../sse");
 const { validarFormatoCuenta } = require("../utils/generarNumeroCuenta");
+const { ObjectId } = require("mongodb");
 
 // POST /api/deposito  (protegida con JWT)
 router.post("/", verifyToken, async (req, res) => {
+  const session = getClient().startSession();
+
   try {
     const db = getDB();
     const { numeroCuenta, monto, descripcion, sucursal } = req.body;
 
+    // ── Validaciones previas a la transacción ─────────────────────────────
     if (!numeroCuenta || typeof numeroCuenta !== "string" || !numeroCuenta.trim()) {
       return res.status(400).json({ ok: false, error: "Debes proporcionar un número de cuenta válido." });
     }
@@ -28,55 +32,80 @@ router.post("/", verifyToken, async (req, res) => {
       return res.status(400).json({ ok: false, error: "El monto debe ser un número mayor a cero." });
     }
 
-    const cuenta = await db.collection("cuentas").findOne({ numeroCuenta: numeroCuenta.trim() });
-    if (!cuenta) {
+    // Verificar existencia y estado de la cuenta antes de abrir la transacción
+    const cuentaExiste = await db.collection("cuentas").findOne({ numeroCuenta: numeroCuenta.trim() });
+    if (!cuentaExiste) {
       return res.status(404).json({ ok: false, error: `No existe ninguna cuenta con el número '${numeroCuenta}'.` });
     }
-    if (cuenta.estatus !== "activa") {
+    if (cuentaExiste.estatus !== "activa") {
       return res.status(400).json({ ok: false, error: `La cuenta '${numeroCuenta}' no está activa.` });
     }
 
-    const nuevoSaldo = cuenta.saldo + montoNum;
-    await db.collection("cuentas").updateOne({ _id: cuenta._id }, { $inc: { saldo: montoNum } });
+    const saldoAnterior = cuentaExiste.saldo;
+    let transaccionId;
+    let nuevoSaldo;
+    let fechaTransaccion;
 
-    const transaccion = {
-      cuentaId:       cuenta._id,
-      tipo:           "deposito",
-      monto:          montoNum,
-      fecha:          new Date(),
-      descripcion:    descripcion || "Depósito vía API",
-      sucursal:       sucursal || "Sucursal desconocida",
-      saldoPosterior: nuevoSaldo
-    };
-    const resultado = await db.collection("transacciones").insertOne(transaccion);
+    // ── Transacción atómica ───────────────────────────────────────────────
+    await session.withTransaction(async () => {
+      // 1. Abonar saldo en la cuenta
+      const cuentaActualizada = await db.collection("cuentas").findOneAndUpdate(
+        { numeroCuenta: numeroCuenta.trim(), estatus: "activa" },
+        { $inc: { saldo: montoNum } },
+        { returnDocument: "after", session }
+      );
 
-    // Registrar en bitácora
-    await db.collection("bitacora").insertOne({
-      fecha:     new Date(),
-      usuarioId: req.usuario.id,
-      accion:    "deposito",
-      estado:    "exitoso",
-      detalle:   { numeroCuenta: numeroCuenta.trim(), monto: montoNum, saldoResultante: nuevoSaldo }
+      if (!cuentaActualizada) {
+        throw Object.assign(new Error("La cuenta no existe o no está activa."), { statusCode: 400 });
+      }
+
+      nuevoSaldo = cuentaActualizada.saldo;
+      fechaTransaccion = new Date();
+
+      // 2. Registrar transacción en historial
+      const resultado = await db.collection("transacciones").insertOne({
+        cuentaId:       cuentaActualizada._id,
+        tipo:           "deposito",
+        monto:          montoNum,
+        fecha:          fechaTransaccion,
+        descripcion:    descripcion || "Depósito vía API",
+        sucursal:       sucursal || "Sucursal desconocida",
+        saldoPosterior: nuevoSaldo
+      }, { session });
+
+      transaccionId = resultado.insertedId;
+
+      // 3. Registrar en bitácora
+      await db.collection("bitacora").insertOne({
+        fecha:     fechaTransaccion,
+        usuarioId: new ObjectId(req.usuario.id),
+        accion:    "deposito",
+        estado:    "exitoso",
+        detalle:   { numeroCuenta: numeroCuenta.trim(), monto: montoNum, saldoResultante: nuevoSaldo }
+      }, { session });
     });
 
-    sendAccountUpdate(cuenta.numeroCuenta, {
-      tipo: "deposito", numeroCuenta: cuenta.numeroCuenta,
-      monto: montoNum, saldoActual: nuevoSaldo, fecha: transaccion.fecha
+    // ── Notificación SSE fuera de la transacción ──────────────────────────
+    sendAccountUpdate(numeroCuenta.trim(), {
+      tipo: "deposito", numeroCuenta: numeroCuenta.trim(),
+      monto: montoNum, saldoActual: nuevoSaldo, fecha: fechaTransaccion
     });
 
     return res.status(201).json({
       ok: true,
       mensaje:         "Depósito realizado correctamente.",
-      transaccionId:   resultado.insertedId,
-      numeroCuenta:    cuenta.numeroCuenta,
+      transaccionId,
+      numeroCuenta:    numeroCuenta.trim(),
       montoDepositado: montoNum,
-      saldoAnterior:   cuenta.saldo,
+      saldoAnterior,
       saldoActual:     nuevoSaldo
     });
 
   } catch (error) {
     console.error("Error en POST /api/deposito", error);
-    return res.status(500).json({ ok: false, error: "Error interno del servidor.", detalle: error.message });
+    return res.status(error.statusCode || 500).json({ ok: false, error: error.message || "Error interno del servidor." });
+  } finally {
+    await session.endSession();
   }
 });
 
