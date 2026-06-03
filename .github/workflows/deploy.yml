@@ -35,7 +35,7 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKER_HUB_USER }}/sistema-de-transferencias-bancarias-backend:latest
-            ${{ secrets.DOCKER_HUB_USER}}/sistema-de-transferencias-bancarias-backend:${{ github.sha }}
+            ${{ secrets.DOCKER_HUB_USER }}/sistema-de-transferencias-bancarias-backend:${{ github.sha }}
 
       - name: Build and push frontend
         uses: docker/build-push-action@v6
@@ -69,6 +69,7 @@ jobs:
             mkdir -p /home/${{ secrets.SSH_USER }}/sistema-de-transferencias-bancarias
             cd /home/${{ secrets.SSH_USER }}/sistema-de-transferencias-bancarias
             export MONGO_URI='${{ secrets.MONGO_URI }}'
+            export DB_NAME='${{ secrets.DB_NAME }}'
             export JWT_SECRET='${{ secrets.JWT_SECRET }}'
             export JWT_EXPIRES_IN='${{ secrets.JWT_EXPIRES_IN }}'
             docker login -u "${{ secrets.DOCKER_HUB_USER }}" -p "${{ secrets.DOCKER_HUB_TOKEN }}"
