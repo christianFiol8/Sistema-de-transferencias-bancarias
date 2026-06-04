@@ -102,7 +102,7 @@ const camposRequeridos = { nombre, apellidoPaterno, correo, contrasena, telefono
         clienteId,
         numeroCuenta,
         tipoCuenta:    "debito",
-        saldo:         0,
+        saldo:         1000,
         moneda:        "MXN",
         fechaApertura: new Date(),
         estatus:       "activa"
