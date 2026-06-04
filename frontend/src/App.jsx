@@ -501,7 +501,7 @@ function AuthScreen({ onAuth }) {
         button { transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease, background .16s ease; }
         button:hover { transform: translateY(-1px); }
         button:disabled { opacity: .72; cursor: not-allowed; transform: none; }
-        .auth-grid { display: grid; grid-template-columns: 1.08fr .92fr; gap: 1.25rem; width: 100%; max-width: 1140px; }
+        .auth-grid { display: grid; grid-template-columns: 1.08fr .92fr; gap: 1.25rem; width: 100%; max-width: 1140px; align-items: start; }
         .soft-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
         .two-col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
         @media (max-width: 900px) {
@@ -517,10 +517,9 @@ function AuthScreen({ onAuth }) {
           style={{
             ...S.card,
             padding: '2rem',
-            minHeight: 600,
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'space-between',
+            gap: '1.5rem',
             background: 'linear-gradient(180deg, rgba(255,255,255,.85) 0%, rgba(249,247,243,.92) 100%)'
           }}
         >
@@ -557,7 +556,7 @@ function AuthScreen({ onAuth }) {
               </p>
               <p style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 800 }}>Consulta inmediata</p>
               <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: C.textSoft }}>
-                Visualiza saldo disponible y tipo de cuenta desde el panel principal.
+                Visualiza saldo disponible y el resumen de tu cuenta desde el panel.
               </p>
             </div>
 
@@ -577,13 +576,13 @@ function AuthScreen({ onAuth }) {
               </p>
               <p style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 800 }}>Accesos rápidos</p>
               <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: C.textSoft }}>
-                Guarda cuentas frecuentes para transferir más rápido en futuras operaciones.
+                Guarda cuentas frecuentes para transferir más rápido.
               </p>
             </div>
           </div>
         </div>
 
-        <div style={{ width: '100%', maxWidth: 470, justifySelf: 'center', alignSelf: 'center' }}>
+        <div style={{ width: '100%', maxWidth: 470, justifySelf: 'center' }}>
           {successAccount ? (
             <SuccessCard
               numeroCuenta={successAccount}
@@ -636,12 +635,12 @@ function AuthScreen({ onAuth }) {
                 {mode === 'registro' && (
                   <>
                     <div className="two-col">
-                      <div style={S.formGroup}>
+                      <div style={{ marginBottom: '1rem' }}>
                         <label style={S.label}>Nombre *</label>
                         <input style={S.input} placeholder="Juan" value={form.nombre || ''} onChange={set('nombre')} required />
                         <FieldError text={fieldErrors.nombre} />
                       </div>
-                      <div style={S.formGroup}>
+                      <div style={{ marginBottom: '1rem' }}>
                         <label style={S.label}>Apellido paterno *</label>
                         <input style={S.input} placeholder="García" value={form.apellidoPaterno || ''} onChange={set('apellidoPaterno')} required />
                         <FieldError text={fieldErrors.apellidoPaterno} />
